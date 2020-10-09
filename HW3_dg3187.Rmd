@@ -92,3 +92,85 @@ instacart %>%
 		values_from = mean_hour
 	)
 ```
+
+
+
+### Problem 2
+
+Import and clean the data, create a new varible indicating whether the specific day is weekday or weekend.
+```{r}
+accel_df = 
+  read_csv ("./data/accel_data.csv") %>%
+  janitor::clean_names() %>%
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute",
+    values_to = "count",
+    names_prefix = "activity_"
+  ) %>%
+  mutate(
+    day = as.factor(day),
+    week = as.factor (week),
+    minute = as.numeric(minute),
+    count = as.numeric(count),
+    weekday_or_weekend = 
+      case_when(
+        day %in% c("Saturday", "Sunday") ~ "Weekend",
+        day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday") ~ "Weekday"))
+```
+There are `r nrow(accel_df) ` rows and `r ncol(accel_df) ` columns in the existing dataframe now. Variables include `r names(accel_df)`.
+
+
+
+
+
+```{r}
+ accel_df  %>% 
+  group_by(week, day) %>% 
+  summarize(
+    sum_activity_count = sum(count)
+  ) %>% 
+  pivot_wider(
+    names_from = day,
+    values_from = sum_activity_count
+  ) %>% 
+  relocate (week, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) %>%
+  knitr::kable(digits = 2) 
+```
+
+
+This produces a 7*5 table. Saturday on week 4 and 5 show exceptionally low activity level. Week 1 Monday was low too.
+
+
+```{r}
+accel_df %>% 
+  group_by(week, day_id) %>%
+  ggplot(aes(x = minute, y = count, color = day, alpha = .7)) + 
+  geom_line() +
+  theme(legend.position = "right") +
+  stat_smooth(se = F,
+              geom ="line"
+            ) +
+  labs(
+    title = "24-hour activity plot",
+    x = "Hour",
+    y = "Activity Level") + 
+  scale_x_continuous(
+    breaks = c(0,240, 480, 720, 960, 1200, 1440),
+    labels = c("0:00", "4:00", "8:00", "12:00", "16:00", "20:00", "24:00")) + 
+  scale_y_continuous(
+    trans = "sqrt") +
+  viridis::scale_color_viridis(discrete = T, name = "Day")
+```
+
+In general, the activity level starts to increase after 6:00 and starts to decrease after 22:00. Friday is kinda special: there's an increase in activity level starting from 20:00.
+
+
+
+
+### Problem 3
+
+
+
+
+
