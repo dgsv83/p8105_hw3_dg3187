@@ -8,6 +8,7 @@ output: github_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(patchwork)
 library(p8105.datasets)
 knitr::opts_chunk$set(
 	fig.width = 6, 
@@ -169,6 +170,73 @@ In general, the activity level starts to increase after 6:00 and starts to decre
 
 
 ### Problem 3
+
+
+```{r}
+library(p8105.datasets)
+data("ny_noaa")
+```
+
+
+
+```{r}
+tidy_ny = 
+  ny_noaa %>%
+  separate(date, c("year", "month", "day"), sep = "([-])") %>% 
+  mutate(month = as.numeric(month),
+         day = as.numeric(day),
+         year = as.numeric(year),
+         tmax = 0.1 * as.numeric(tmax),
+         tmin = 0.1 * as.numeric(tmin),
+         prcp = 0.1 * as.numeric(prcp),
+         snow = as.numeric(snow),
+         snwd = as.numeric(snwd)) %>%
+  mutate(
+      snow = case_when(
+      snow <0 ~ 0,
+      snow >= 0 ~ snow))
+```
+
+```{r}
+ny_noaa %>%  
+  count(snow == "0")
+
+
+
+range(tidy_ny$year)
+```
+
+2008508	out of `r nrow(ny_noaa)` of the observations have value 0 for the snowfall variables and 381221 out of `r nrow(ny_noaa)` are NA. Firstly because NY is known to snow in winter only (not all the year). Secondly, snowfall and snow depth are redundant. Sometimes it does snow but the value is recorded under Snow depth(snwd) instead of Snowfall(snow). 
+
+
+
+```{r}
+
+skimr::skim_without_charts(tidy_ny %>% select(-id))
+
+fig = 
+  tidy_ny %>%
+  filter(month %in% c("1", "7")) %>%
+  group_by(id, year, month) %>%
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>%
+  drop_na() %>% 
+  ggplot(aes(x = year, y = mean_tmax, group = id, color = id)) +
+  geom_point() +
+  geom_path() +
+  theme(legend.position = 'none') +
+  facet_grid(. ~ month) +
+  labs(
+    title = "Mean average temperature for January and July across stations and years", 
+    x = "year", 
+    y = "average maximum temperature (C)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+fig
+```
+
+
+
+
 
 
 
