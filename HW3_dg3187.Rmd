@@ -1,7 +1,6 @@
 ---
 title: "P8105_HW3_dg3187"
 author: "Danyang Gui"
-date: '`r format(Sys.time(), "%Y-%m-%d")`'
 output: github_document
 ---
 
@@ -10,6 +9,7 @@ output: github_document
 library(tidyverse)
 library(patchwork)
 library(p8105.datasets)
+install.packages("hexbin",repos = "http://cran.us.r-project.org")
 knitr::opts_chunk$set(
 	fig.width = 6, 
   fig.asp = .6,
@@ -140,7 +140,7 @@ There are `r nrow(accel_df) ` rows and `r ncol(accel_df) ` columns in the existi
 ```
 
 
-This produces a 7*5 table. Saturday on week 4 and 5 show exceptionally low activity level. Week 1 Monday was low too.
+This produces a 7*5 table. Saturdays of week 4 and 5 show exceptionally low activity level. Week 1 Monday was low too.
 
 
 ```{r}
@@ -236,6 +236,66 @@ fig
 
 
 
+For January, the average maximum temperature varied between -10 degree to 10 degree with two extremely cold year below -10 degree which was consistently observed across stations. Two outliers below -10 degree were shown in the graph. 
+For July, the average maximum temperature varied between 20 degree to 35 degree. Four outliers below 20 degree were shown in the graph.
+
+
+
+
+
+
+```{r}
+
+
+
+fig_1 =
+  tidy_ny %>%
+  drop_na(tmin, tmax) %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex() +
+  theme(legend.position = 'right') +
+  labs(
+    title = "Maximum Temperature vs. Minimum Temperature", 
+    x = "Minimum Temp (C)", 
+    y = "Maximum Temp (C)") +
+    viridis::scale_color_viridis(
+    name = "Location",
+    discrete = TRUE)
+
+
+fig_1
+
+
+
+fig_2 =
+  tidy_ny %>%
+  filter(between(snow, 0, 100),!is.na(snow)) %>% 
+  group_by(year,id) %>%
+  summarize(mean_snow = mean(snow, na.rm = TRUE), group = id, color = id) %>%
+  ggplot(aes(x = year, y = mean_snow)) +
+    geom_hex() +
+    theme(legend.position = 'right') + 
+    labs(
+    title = "Distribution of snowfall values across years", 
+    x = "year", 
+    y = "snowfall level (mm)") +
+    viridis::scale_color_viridis(
+    name = "Location",
+    discrete = TRUE) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_y_continuous(breaks = c(5,25,50,100),
+                     limits = c(0,100))+
+  scale_x_discrete(breaks = c(1981, 1991, 2001, 2010),
+                     limits = c(1981,NA))
+            
+
+
+fig_2
+
+
+
+fig_1 + fig_2    
+```
 
 
 
