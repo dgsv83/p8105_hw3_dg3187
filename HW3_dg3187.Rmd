@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
-  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.colour = "viridis",   
   ggplot2.continuous.fill = "viridis"
 )
 scale_colour_discrete = scale_colour_viridis_d
@@ -106,14 +106,14 @@ accel_df =
   pivot_longer(
     activity_1:activity_1440,
     names_to = "minute",
-    values_to = "count",
+    values_to = "activity_count",
     names_prefix = "activity_"
   ) %>%
   mutate(
     day = as.factor(day),
-    week = as.factor (week),
+    week = as.factor(week),
     minute = as.numeric(minute),
-    count = as.numeric(count),
+    activity_count = as.numeric(activity_count),
     weekday_or_weekend = 
       case_when(
         day %in% c("Saturday", "Sunday") ~ "Weekend",
@@ -129,24 +129,24 @@ There are `r nrow(accel_df) ` rows and `r ncol(accel_df) ` columns in the existi
  accel_df  %>% 
   group_by(week, day) %>% 
   summarize(
-    sum_activity_count = sum(count)
+    sum_activity_count = sum(activity_count)
   ) %>% 
   pivot_wider(
     names_from = day,
     values_from = sum_activity_count
   ) %>% 
-  relocate (week, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) %>%
+  relocate(week, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) %>%
   knitr::kable(digits = 2) 
 ```
 
 
-This produces a 7*5 table. Saturdays of week 4 and 5 show exceptionally low activity level. Week 1 Monday was low too.
+This produces a 7*5 table. Saturdays of week 4 and 5 show exceptionally low activity level. Week 1 Monday was low too. The activity level for Week 3 Monday was really high. 
 
 
 ```{r}
 accel_df %>% 
   group_by(week, day_id) %>%
-  ggplot(aes(x = minute, y = count, color = day, alpha = .7)) + 
+  ggplot(aes(x = minute, y = activity_count, color = day, alpha = .7)) + 
   geom_line() +
   theme(legend.position = "right") +
   stat_smooth(se = F,
@@ -201,9 +201,6 @@ tidy_ny =
 ny_noaa %>%  
   count(snow == "0")
 
-
-
-range(tidy_ny$year)
 ```
 
 2008508	out of `r nrow(ny_noaa)` of the observations have value 0 for the snowfall variables and 381221 out of `r nrow(ny_noaa)` are NA. Firstly because NY is known to snow in winter only (not all the year). Secondly, snowfall and snow depth are redundant. Sometimes it does snow but the value is recorded under Snow depth(snwd) instead of Snowfall(snow). 
@@ -239,8 +236,7 @@ fig
 For January, the average maximum temperature varied between -10 degree to 10 degree with two extremely cold year below -10 degree which was consistently observed across stations. Two outliers below -10 degree were shown in the graph. 
 For July, the average maximum temperature varied between 20 degree to 35 degree. Four outliers below 20 degree were shown in the graph.
 
-
-
+There were fluctuations of average temperature across these 3 decades but overall trending was not strictly increasing or decreasing. 
 
 
 
@@ -263,10 +259,6 @@ fig_1 =
     discrete = TRUE)
 
 
-fig_1
-
-
-
 fig_2 =
   tidy_ny %>%
   filter(between(snow, 0, 100),!is.na(snow)) %>% 
@@ -284,16 +276,13 @@ fig_2 =
     discrete = TRUE) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_y_continuous(breaks = c(5,25,50,100),
-                     limits = c(0,100))+
-  scale_x_discrete(breaks = c(1981, 1991, 2001, 2010),
-                     limits = c(1981,NA))
+                     limits = c(0,100))
+  
             
 
-
-fig_2
-
-
-
+    
+ 
+  
 fig_1 + fig_2    
 ```
 
